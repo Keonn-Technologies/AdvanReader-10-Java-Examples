@@ -6,6 +6,9 @@ import java.util.Date;
 import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
+import org.epctagcoder.parse.SGTIN.ParseSGTIN;
+import org.epctagcoder.result.SGTIN;
+
 import com.keonn.util.ThroughputX;
 import com.thingmagic.Gen2.Session;
 import com.thingmagic.Gen2.Target;
@@ -105,7 +108,6 @@ public class ADRD_M1_10Asynch implements ReadListener, TransportListener, StatsL
 	private void run() {
 		
 		try {
-			
 			// First it connects with AdvanReader-10 via the USB connection, in
 			reader = Reader.create(uri!=null?uri:DEFAULT_URI);
 			reader.connect();
@@ -179,9 +181,17 @@ public class ADRD_M1_10Asynch implements ReadListener, TransportListener, StatsL
 	@Override
 	public void tagRead(Reader r, TagReadData t) {
 		th.hit();
-		
+		String ean = "";
+		try {
+			SGTIN sgtin = ParseSGTIN.Builder().withRFIDTag(t.getTag().epcString()).build().getSGTIN();
+			ean = new StringBuilder().append(sgtin.getCompanyPrefix()).append(sgtin.getExtensionDigit()).append(sgtin.getItemReference()).append(sgtin.getCheckDigit())
+					.deleteCharAt(7) //extension digit carries an extra digit, dunno why
+					.toString();
+		} catch (Exception e) {
+//			e.printStackTrace();
+		}
 		// This function is called every time there is a tag read
-		System.out.println((System.currentTimeMillis()-startTime)+"::"+t.getTag()+"["+t.getRssi()+" dBm] th: "+th.getThroughput()+" tags/s");
+		System.out.println((System.currentTimeMillis()-startTime)+":EAN:"+ean+":EPC:"+t.getTag()+"["+t.getRssi()+" dBm] th: "+th.getThroughput()+" tags/s");
 	}
 
 	SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd.HHmmss.SSS");
