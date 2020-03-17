@@ -11,6 +11,7 @@ import com.thingmagic.Gen2.Session;
 import com.thingmagic.Gen2.Target;
 import com.thingmagic.ReadListener;
 import com.thingmagic.Reader;
+import com.thingmagic.SerialReader;
 import com.thingmagic.SerialReader.AntennaStatusReport;
 import com.thingmagic.SerialReader.FrequencyStatusReport;
 import com.thingmagic.SerialReader.ReaderStats;
@@ -109,7 +110,9 @@ public class ADRD_M1_10Asynch implements ReadListener, TransportListener, StatsL
 			// First it connects with AdvanReader-10 via the USB connection, in
 			reader = Reader.create(uri!=null?uri:DEFAULT_URI);
 			reader.connect();
-
+			((SerialReader) reader).cmdSetBaudRate(115200);
+			((SerialReader) reader).setSerialBaudRate(115200);
+			((SerialReader) reader).cmdSetUserProfile(SerialReader.SetUserProfileOption.SAVE,SerialReader.ConfigKey.ALL,SerialReader.ConfigValue.CUSTOM_CONFIGURATION);
 			// Several RFID and other parameters are set
 			reader.paramSet(TMConstants.TMR_PARAM_REGION_ID, Reader.Region.EU3);
 			reader.paramSet(TMConstants.TMR_PARAM_READ_ASYNCONTIME, 300);
