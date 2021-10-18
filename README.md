@@ -1,6 +1,6 @@
 # AdvanReader-10 Java Examples
 
-&#8658; Please check our wiki: [http://wiki.keonn.com/AdvanReader-m1-10/advanreader-m10-java-examples](http://wiki.keonn.com/AdvanReader-m1-10/advanreader-m10-java-examples)
+&#8658; Please check our wiki: [https://wiki.keonn.com/rfid-components/advanreader-10-1-port/advanreader-m10-java-examples](https://wiki.keonn.com/rfid-components/advanreader-10-1-port/advanreader-m10-java-examples)
 
 These examples use a combination of ThingMagic's Java SDK and propietary Keonn libraries to show how to implement some functionalities with AdvanReader-10 series devices.
 
