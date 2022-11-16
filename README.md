@@ -52,7 +52,9 @@ java -classpath bin:lib/slf4j-api-1.6.1.jar:lib/slf4j-simple-1.6.1.jar:lib/keonn
 ```
 
 
-#### MacOS X (UNTESTED)
+#### MacOS X x64 (UNTESTED)
 ```sh
-java -classpath bin:lib/slf4j-api-1.6.1.jar:lib/slf4j-simple-1.6.1.jar:lib/keonn-util.jar:lib/keonn-adrd.jar -Djava.library.path=./native-lib/macosx com.keonn.adrd.ADRD_M1_10Asynch eapi:///dev/tty.usbserial-A5U2GDO
+
+java -classpath bin:lib/slf4j-api-1.6.1.jar:lib/slf4j-simple-1.6.1.jar:lib/keonn-util.jar:lib/keonn-adrd.jar:lib/jctools-core-1.2.1.jar:lib/commons-net-3.7.2.jar:lib/jna-platform-4.4.0.jar:lib/agrona-0.9.5.jar:lib/nrjavaserial-5.2.1.jar -Djava.library.path=./native-lib/macosx-x64-neo -Dgnu.io.rxtx.SerialPorts=/dev/tty.usbserial-DK6U4F24 com.keonn.adrd.ADRD_M1_10_MacOSX macosx:///dev/tty.usbserial-DK6U4F24
+
 ```

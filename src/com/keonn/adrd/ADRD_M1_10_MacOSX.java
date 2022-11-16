@@ -1,14 +1,17 @@
 package com.keonn.adrd;
 
-import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.keonn.adrd_m4_100.NRSerialTransport;
 import com.keonn.util.ThroughputX;
 import com.thingmagic.Gen2.Session;
 import com.thingmagic.Gen2.Target;
@@ -22,7 +25,8 @@ import com.thingmagic.SerialReader.ReaderStatsFlag;
 import com.thingmagic.SerialReader.StatusReport;
 import com.thingmagic.SerialReader.TemperatureStatusReport;
 
-import net.ihg.util.HexStringX;
+
+import gnu.io.NRSerialPort;
 
 import com.thingmagic.SimpleReadPlan;
 import com.thingmagic.StatsListener;
@@ -32,7 +36,8 @@ import com.thingmagic.TagProtocol;
 import com.thingmagic.TagReadData;
 import com.thingmagic.TransportListener;
 
-import com.fazecast.jSerialComm.*;
+import net.ihg.util.HexStringX;
+import net.ihg.util.ObjectHelper;
 
 /**
  * Copyright (c) 2017 Keonn technologies S.L.
@@ -66,13 +71,15 @@ import com.fazecast.jSerialComm.*;
  *
  */
 
-public class ADRD_M1_10Asynch implements ReadListener, TransportListener, StatsListener, StatusListener{
+public class ADRD_M1_10_MacOSX implements ReadListener, TransportListener, StatsListener, StatusListener{
 	public static final byte[] VERSION = {(byte) 0xFF,0x00,(byte) 0x03,0x1D,0x0C};
 
 	private static final String DEFAULT_URI="eapi:///dev/ttyUSB0";
+
+	private static boolean addTransport;
 	private String uri;
 
-	public ADRD_M1_10Asynch(String uri) {
+	public ADRD_M1_10_MacOSX(String uri) {
 		this.uri=uri;
 	}
 
@@ -83,7 +90,17 @@ public class ADRD_M1_10Asynch implements ReadListener, TransportListener, StatsL
 		System.out.println("Windows  reader-uri: eapi://COM9");
 		System.out.println("Linux    reader-uri: eapi:///dev/ttyUSB0");
 		
-		final ADRD_M1_10Asynch app = new ADRD_M1_10Asynch(args.length>0?args[0]:null);
+		if(args.length>1) {
+			try {
+				addTransport = ObjectHelper.figureOutBoolean(args[1], false);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		
+		System.out.println("ADD TRANSPORT: "+addTransport);
+		
+		final ADRD_M1_10_MacOSX app = new ADRD_M1_10_MacOSX(args.length>0?args[0]:null);
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 			public void run(){
@@ -112,49 +129,45 @@ public class ADRD_M1_10Asynch implements ReadListener, TransportListener, StatsL
 	ThroughputX th;
 	private long lastRead;
 
+	private InputStream in;
+
+	private OutputStream out;
+
 	private void run() {
-		
-		/*
-try {
-            
-            byte[] VERSION = {(byte) 0xFF,0x00,(byte) 0x03,0x1D,0x0C};
-            SerialPort port = SerialPort.getCommPort("dev/tty.usbserial-A5LRSHT");
-            port.setComPortParameters(115200, 8, 1, 0);
-            port.setFlowControl(0);
-            port.openPort();
-            
-            OutputStream out = port.getOutputStream();
-            InputStream in = port.getInputStream();
-            
-            while(true) {
-                
-                try {
-                    out.write(VERSION);
-                    
-                    byte[] bb = new byte[64];
-                    int read = in.read(bb);
-                    
-                    System.out.println(HexStringX.printHex(bb,0,read));
-                    
-                    Thread.sleep(1000);
-                } catch (Exception e) {
-                    // TODO: handle exception
-                    e.printStackTrace();
-                }
-                
-            }
-            
-            
-        } catch (Exception e) {
-            // TODO: handle exception
-            e.printStackTrace();
-        }*/
 		
 		try {
 			
 			// First it connects with AdvanReader-10 via the USB connection, in
 			reader = Reader.create(uri!=null?uri:DEFAULT_URI);
-			reader.connect();
+			
+			int retries = 4;
+			boolean success=false;
+			List<Exception> exs = new ArrayList<>();
+			while(retries-->0) {
+				try {
+					if(addTransport) {
+						reader.addTransportListener(this);
+					}
+					reader.connect();
+					success=true;
+					break;
+				} catch (Exception e) {
+					exs.add(e);
+					reader.destroy();
+					reader = Reader.create(uri!=null?uri:DEFAULT_URI);
+					reader.paramSet(TMConstants.TMR_PARAM_TRANSPORTTIMEOUT,3000);
+				}
+			}
+			
+			if(!success) {
+				System.out.println("Connection failed. Last exception: "+exs.get(exs.size()-1).getMessage());
+				exs.get(exs.size()-1).printStackTrace();
+				System.exit(1);
+			}
+			
+			
+			
+			
 			((SerialReader) reader).cmdSetBaudRate(115200);
 			((SerialReader) reader).setSerialBaudRate(115200);
 			((SerialReader) reader).cmdSetUserProfile(SerialReader.SetUserProfileOption.SAVE,SerialReader.ConfigKey.ALL,SerialReader.ConfigValue.CUSTOM_CONFIGURATION);
@@ -162,9 +175,9 @@ try {
 			reader.paramSet(TMConstants.TMR_PARAM_REGION_ID, Reader.Region.EU3);
 			reader.paramSet(TMConstants.TMR_PARAM_READ_ASYNCONTIME, 300);
 			reader.paramSet(TMConstants.TMR_PARAM_READ_ASYNCOFFTIME, 0);
-			reader.paramSet(TMConstants.TMR_PARAM_RADIO_READPOWER, 2100);
+			reader.paramSet(TMConstants.TMR_PARAM_RADIO_READPOWER, 1500);
 			reader.paramSet(TMConstants.TMR_PARAM_GEN2_SESSION, Session.S0);
-			reader.paramSet(TMConstants.TMR_PARAM_GEN2_TARGET, Target.AB);
+			reader.paramSet(TMConstants.TMR_PARAM_GEN2_TARGET, Target.A);
 			reader.paramSet(TMConstants.TMR_PARAM_READER_STATS_ENABLE, new ReaderStatsFlag[]{ReaderStatsFlag.TEMPERATURE});
 			reader.paramSet(TMConstants.TMR_PARAM_READER_STATUS_TEMPERATURE,true);			
 			
@@ -213,7 +226,8 @@ try {
 			@SuppressWarnings("resource")
 			Scanner scanner = new Scanner(System.in);
 			System.out.println("Press return to stop the test...");
-			scanner.nextLine();
+			String line = scanner.nextLine();
+			System.out.println("Line detected:"+line+"\nStarting shutdown....");
 			shutdown();
 			
 						
