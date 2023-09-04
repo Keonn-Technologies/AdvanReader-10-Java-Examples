@@ -51,6 +51,10 @@ java -classpath bin:lib/slf4j-api-1.6.1.jar:lib/slf4j-simple-1.6.1.jar:lib/keonn
 java -classpath bin:lib/slf4j-api-1.6.1.jar:lib/slf4j-simple-1.6.1.jar:lib/keonn-util.jar:lib/keonn-adrd.jar -Djava.library.path=./native-lib/linux-armhf com.keonn.adrd.ADRD_M1_10Asynch eapi:///dev/ttyUSB0
 ```
 
+**ARM 64**
+```sh
+java -classpath bin:lib/* -Djava.library.path=./native-lib/linux-arm64 com.keonn.adrd.ADRD_M1_10Asynch eapi:///dev/ttyUSB0
+```
 
 #### MacOS X x64 (UNTESTED)
 ```sh
