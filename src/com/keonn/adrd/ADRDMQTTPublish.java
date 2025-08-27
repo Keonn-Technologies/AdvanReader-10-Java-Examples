@@ -359,7 +359,7 @@ public class ADRDMQTTPublish implements ReadListener, ReadExceptionListener{
 			int maxPower = (int) reader.paramGet(TMConstants.TMR_PARAM_RADIO_POWERMAX);
 			int minPower = (int) reader.paramGet(TMConstants.TMR_PARAM_RADIO_POWERMIN);
 			
-			verifyAntennas(antennas, ports);
+			//verifyAntennas(antennas, ports);
 			verifyPower(readPower, minPower, maxPower);
 			
 			asyncOffTime = (asyncOnTime*100)/dutyCycle - asyncOnTime;
