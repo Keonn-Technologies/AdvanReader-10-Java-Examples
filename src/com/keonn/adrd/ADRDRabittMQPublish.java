@@ -306,9 +306,15 @@ public class ADRDRabittMQPublish implements ReadListener, ReadExceptionListener{
 			SerialReader adrd = (SerialReader) reader;
 			int baudrate = adrd.getSerialTransport().getBaudRate();
 			
-			if(baudrate!=targetBaudrate){
-				adrd.cmdSetBaudRate(targetBaudrate);
-				adrd.getSerialTransport().setBaudRate(targetBaudrate);
+			if (model.contains("M7")){
+				if(baudrate!=115200){
+					adrd.getSerialTransport().setBaudRate(115200);
+				}
+			} else if(model.contains("M6")) {
+				if(baudrate!=targetBaudrate){
+					adrd.cmdSetBaudRate(targetBaudrate);
+					adrd.getSerialTransport().setBaudRate(targetBaudrate);
+				}
 			}
 
 			// verification
@@ -316,7 +322,7 @@ public class ADRDRabittMQPublish implements ReadListener, ReadExceptionListener{
 			int maxPower = (int) reader.paramGet(TMConstants.TMR_PARAM_RADIO_POWERMAX);
 			int minPower = (int) reader.paramGet(TMConstants.TMR_PARAM_RADIO_POWERMIN);
 			
-			verifyAntennas(new int[]{antenna}, ports);
+			//verifyAntennas(new int[]{antenna}, ports);
 			verifyPower(readPower, minPower, maxPower);
 			
 			// reader configuration

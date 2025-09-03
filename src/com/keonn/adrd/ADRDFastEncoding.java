@@ -216,6 +216,9 @@ public class ADRDFastEncoding implements ReadListener{
 			
 			reader = Reader.create(serialDevice);
 			reader.connect();
+
+			String model = (String) reader.paramGet("/reader/version/model");
+			System.out.println("Reader model: " + model);
 			
 			String fw = (String) reader.paramGet("/reader/version/software");
 			System.out.println("Reader software version: "+fw);
@@ -223,12 +226,18 @@ public class ADRDFastEncoding implements ReadListener{
 			// change baudrate to get the maximum comm speed
 			SerialReader adrd = (SerialReader) reader;
 			int baudrate = adrd.getSerialTransport().getBaudRate();
-			
-			if(baudrate!=targetBaudrate){
-				adrd.cmdSetBaudRate(targetBaudrate);
-				adrd.getSerialTransport().setBaudRate(targetBaudrate);
+
+			if (model.contains("M7")){
+				if(baudrate!=115200){
+					adrd.getSerialTransport().setBaudRate(115200);
+				}
+			} else if(model.contains("M6")) {
+				if(baudrate!=targetBaudrate){
+					adrd.cmdSetBaudRate(targetBaudrate);
+					adrd.getSerialTransport().setBaudRate(targetBaudrate);
+				}
 			}
-			
+
 			reader.paramSet("/reader/region/id", region);
 			reader.paramSet("/reader/read/asyncOnTime", asyncOnTime);
 			reader.paramSet("/reader/read/asyncOffTime", asyncOffTime);

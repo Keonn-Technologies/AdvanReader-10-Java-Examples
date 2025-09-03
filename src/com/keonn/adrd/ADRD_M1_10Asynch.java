@@ -110,7 +110,14 @@ public class ADRD_M1_10Asynch implements ReadListener, TransportListener, StatsL
 			// First it connects with AdvanReader-10 via the USB connection, in
 			reader = Reader.create(uri!=null?uri:DEFAULT_URI);
 			reader.connect();
-			((SerialReader) reader).cmdSetBaudRate(115200);
+
+			String model = (String) reader.paramGet("/reader/version/model");
+			System.out.println("Reader model: " + model);
+
+			if(model.contains("M6")) {
+				((SerialReader) reader).cmdSetBaudRate(115200);
+			}
+			
 			((SerialReader) reader).setSerialBaudRate(115200);
 			((SerialReader) reader).cmdSetUserProfile(SerialReader.SetUserProfileOption.SAVE,SerialReader.ConfigKey.ALL,SerialReader.ConfigValue.CUSTOM_CONFIGURATION);
 			// Several RFID and other parameters are set
